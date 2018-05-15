@@ -17,9 +17,40 @@ export default class NewClass extends cc.Component {
 
     @property(cc.Prefab)
     rectanglePrefab: cc.Prefab = null;
+
+    @property (cc.Node)
+    player: cc.Node = null;
+
+    @property(cc.Node)
+    background: cc.Node = null;
+
+    @property(cc.Node)
+    drawing: cc.Node = null;
+
+    @property(cc.Node)
+    camera: cc.Node = null;
+
+    @property(cc.Label)
+    scoreLabel: cc.Label = null;
+
+    @property({url: cc.AudioClip})
+    scoreAudio: cc.AudioClip = null;    
+    
+    @property({url: cc.AudioClip})
+    gameOverAudio: cc.AudioClip = null;
+    
+    @property({url: cc.AudioClip})
+    backgroundAudio: cc.AudioClip = null;
+
     // LIFE-CYCLE CALLBACKS:
 
     rectanglePool: cc.NodePool;
+    oldRectPosY: number;
+    scoreVal: number;
+    swapSide: boolean;
+    isBegan: boolean;
+    backgroundAudioID: number;
+    isGameOver: boolean;
 
     onLoad () {
         //init pool
@@ -32,10 +63,33 @@ export default class NewClass extends cc.Component {
     }
 
     start () {
-        this.schedule(this.spawnRectangle, 3);
+        this.isGameOver = false;
+        this.isBegan = false;
+        this.swapSide = false;
+        this.oldRectPosY = 0;
+        this.scoreVal = 0;
+        this.background.setLocalZOrder(1);
+        this.player.setLocalZOrder(3);
+        this.drawing.setLocalZOrder(4);
+        this.scoreLabel.node.parent.setLocalZOrder(5);
+
+        let initRectCount = 5;
+        for (let i = 0; i < initRectCount; i++) {
+            this.spawnRectangle();
+        }
+
+        let beginRect = this.spawnRectangle();
+        beginRect.position = this.player.position;
+
+        this.backgroundAudioID = cc.audioEngine.play(this.backgroundAudio, true, 0.5);
     }
 
-    // update (dt) {}
+    update (dt) {
+        if (this.oldRectPosY - this.camera.y < this.node.height / 2) {
+            this.spawnRectangle();
+            console.log(this.oldRectPosY);
+        }
+    }
 
     createRectangle () {
         let rect: cc.Node = null;
@@ -50,9 +104,37 @@ export default class NewClass extends cc.Component {
     }
 
 
-    spawnRectangle () {
+    spawnRectangle () : cc.Node {
         let rect = this.createRectangle();
         this.node.addChild(rect);
         rect.getComponent(Rectangle).init();
+        rect.setLocalZOrder(2);
+        this.camera.getComponent(cc.Camera).addTarget(rect);
+
+        //set y position
+        let randY = Math.random();
+        rect.y = this.oldRectPosY + randY * rect.height * 2 + rect.height;
+
+        this.oldRectPosY = rect.y;
+        return rect;
+    }
+
+    gainScore () {
+        this.scoreVal++;
+        this.scoreLabel.string = this.scoreVal.toString();
+        cc.audioEngine.play(this.scoreAudio, false, 1);
+    }
+
+    gameOver () {
+        this.isGameOver = true;
+        cc.audioEngine.play(this.gameOverAudio, false, 1);
+        cc.audioEngine.stop(this.backgroundAudioID);
+        
+        //save score
+        cc.sys.localStorage.setItem("score", this.scoreVal);
+
+        this.node.runAction(cc.sequence(cc.fadeOut(0.2), cc.callFunc(function () {
+            cc.director.loadScene("GameOver");
+        })));
     }
 }

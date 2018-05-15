@@ -1,0 +1,30 @@
+{
+  "ver": "1.0.0",
+  "uuid": "c94d1029-aa12-4801-bdc2-ad0667db7f57",
+  "type": "sprite",
+  "wrapMode": "clamp",
+  "filterMode": "bilinear",
+  "subMetas": {
+    "BackGroundGame2": {
+      "ver": "1.0.3",
+      "uuid": "61cf5c0f-7cec-4d77-91dc-a2fe72ca5209",
+      "rawTextureUuid": "c94d1029-aa12-4801-bdc2-ad0667db7f57",
+      "trimType": "auto",
+      "trimThreshold": 1,
+      "rotated": false,
+      "offsetX": 0,
+      "offsetY": 0,
+      "trimX": 0,
+      "trimY": 0,
+      "width": 1242,
+      "height": 13248,
+      "rawWidth": 1242,
+      "rawHeight": 13248,
+      "borderTop": 0,
+      "borderBottom": 0,
+      "borderLeft": 0,
+      "borderRight": 0,
+      "subMetas": {}
+    }
+  }
+}

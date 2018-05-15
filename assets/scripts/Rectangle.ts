@@ -9,28 +9,38 @@
 //  - [English] http://www.cocos2d-x.org/docs/creator/manual/en/scripting/life-cycle-callbacks.html
 
 const {ccclass, property} = cc._decorator;
+import InGame from "./InGame";
 
 @ccclass
 export default class NewClass extends cc.Component {
 
     canvasNode: cc.Node = null;
-    speed: number;
 
     // LIFE-CYCLE CALLBACKS:
 
     // onLoad () {}
 
     start () {
-        this.speed = 200;
     }
 
     update (dt) {
-        this.node.y -= this.speed * dt;
+        
     }
 
     init () {
+
+        //init random position
         let rand = cc.randomMinus1To1();
-        let x = this.canvasNode.width / 2 * rand;
+        rand *= 0.5;
+        if (this.canvasNode.getComponent(InGame).swapSide) {
+            rand = rand < 0 ? -rand : rand;
+            this.canvasNode.getComponent(InGame).swapSide = !this.canvasNode.getComponent(InGame).swapSide;
+        } else {
+            rand = rand > 0 ? -rand : rand;
+            this.canvasNode.getComponent(InGame).swapSide = !this.canvasNode.getComponent(InGame).swapSide;
+        }
+
+        let x = this.canvasNode.width / 2 * rand + (Math.abs(rand) / rand) * this.canvasNode.width / 4;
         if (x < -this.canvasNode.width / 2 + this.node.width / 2) {
             x = -this.canvasNode.width / 2 + this.node.width / 2;
         }
@@ -42,5 +52,17 @@ export default class NewClass extends cc.Component {
         let y = this.canvasNode.height / 2 + this.node.height / 2;
 
         this.node.position = new cc.Vec2(x, y);
+
+        //init box collider
+        this.node.getComponent(cc.BoxCollider).size = cc.size(5, this.node.height);
+
+        //init bounding box
+        this.node.getChildByName("BoundingBox").getComponent(cc.BoxCollider).size = this.node.getContentSize();
+    }
+
+    fall () {
+        let scaleToAction = cc.scaleTo(1, 0, 0);
+        let rotateByAction = cc.rotateBy(2, 360);
+        this.node.runAction(cc.spawn(scaleToAction, rotateByAction));
     }
 }
