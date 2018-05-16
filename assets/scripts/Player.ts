@@ -31,6 +31,7 @@ export default class NewClass extends cc.Component {
     isBound: boolean;
     isGrounding: boolean;
     boundSpeed: number;
+    isAttachMiddleRectangle: boolean;
 
     //Game setting
     scrollSpeed: number;
@@ -44,10 +45,11 @@ export default class NewClass extends cc.Component {
         this.canvas.node.on(cc.Node.EventType.TOUCH_END, this.onTouchEnd.bind(this));
 
         cc.director.getCollisionManager().enabled = true;
-        cc.director.getCollisionManager().enabledDebugDraw = true;
+        //cc.director.getCollisionManager().enabledDebugDraw = true;
     }
 
     start () {
+        this.isAttachMiddleRectangle = true;
         this.scrollSpeed = 100;
         this.isBound = false;
         this.isGrounding = true;
@@ -122,6 +124,7 @@ export default class NewClass extends cc.Component {
         switch (other.tag) {
             case 1: { //rectangle
                 this.node.x = other.node.x;
+                this.isAttachMiddleRectangle = true;
                 this.isBound = false;
                 this.boundSpeed = 0;
             } break;
@@ -151,7 +154,7 @@ export default class NewClass extends cc.Component {
     onCollisionExit (other, self) {
         switch (other.tag) {
             case 1: { //rectangle
-                
+                this.isAttachMiddleRectangle = false;
             } break;
 
             case 2: { //rectangle bounding box
@@ -199,9 +202,9 @@ export default class NewClass extends cc.Component {
         if (this.isBound) {
             let angle = this.velocity.angle(new cc.Vec2(0, 1)) * 180 / Math.PI;
             this.node.rotation = angle * Math.abs(this.velocity.x) / this.velocity.x;
-            console.log(this.node.rotation);
         }
-        else {
+
+        if (!this.isBound || (this.isAttachMiddleRectangle == false && this.isGrounding)) {
             this.node.rotation = 0;
         }
     }

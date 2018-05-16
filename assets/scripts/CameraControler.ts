@@ -16,6 +16,9 @@ export default class NewClass extends cc.Component {
     @property(cc.Node)
     target: cc.Node = null;
 
+    @property(cc.Canvas)
+    canvas: cc.Canvas = null;
+
     camera: cc.Camera = null;
 
     // LIFE-CYCLE CALLBACKS:
@@ -44,5 +47,6 @@ export default class NewClass extends cc.Component {
         let targetPos = this.target.convertToWorldSpaceAR(cc.Vec2.ZERO);
         this.node.position = this.node.parent.convertToNodeSpaceAR(targetPos);
         this.node.x -= this.target.x;
+        this.node.y += this.canvas.node.height / 4;
     }
 }

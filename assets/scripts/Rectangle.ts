@@ -15,6 +15,7 @@ import InGame from "./InGame";
 export default class NewClass extends cc.Component {
 
     canvasNode: cc.Node = null;
+    pool: cc.NodePool = null;
 
     // LIFE-CYCLE CALLBACKS:
 
@@ -61,10 +62,14 @@ export default class NewClass extends cc.Component {
     }
 
     fall () {
+        let self = this;
         this.node.stopAllActions();
         let scaleToAction = cc.scaleTo(1, 0, 0);
-        let rotateByAction = cc.rotateBy(2, 360);
-        this.node.runAction(cc.spawn(scaleToAction, rotateByAction));
+        //let rotateByAction = cc.rotateBy(2, 360);
+        //this.node.runAction(cc.spawn(scaleToAction, rotateByAction));
+        this.node.runAction(cc.sequence(scaleToAction, cc.callFunc(function () {
+            //self.pool.put(self.node);
+        })));
     }
 
     deformation () {
@@ -76,5 +81,15 @@ export default class NewClass extends cc.Component {
 
     startEffect () {
         this.scheduleOnce(this.deformation, 0.4);
+    }
+
+    reuse (pool: cc.NodePool) {
+        this.pool = pool;
+    }
+
+    unuse () {
+        if (this.canvasNode.getComponent(InGame).camera.getComponent(cc.Camera).getTargets().indexOf(this.node) >= 0) {
+            this.canvasNode.getComponent(InGame).camera.getComponent(cc.Camera).removeTarget(this.node);
+        }
     }
 }

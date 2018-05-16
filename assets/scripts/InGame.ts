@@ -61,9 +61,9 @@ export default class NewClass extends cc.Component {
         this.rectanglePool = new cc.NodePool("Rectangle");
         for (let i = 0; i < RECTANGLE_INIT_COUNT; i++) {
             let rect = cc.instantiate(this.rectanglePrefab);
+            rect.getComponent(Rectangle).canvasNode = this.node;
             this.rectanglePool.put(rect);
         }
-
     }
 
     start () {
@@ -81,6 +81,7 @@ export default class NewClass extends cc.Component {
 
         //spawn begin rectangle
         let beginRect = this.spawnRectangle();
+        beginRect.getComponent(Rectangle).init();
         beginRect.position = this.player.position;
         this.oldRectPosY = beginRect.y;
         beginRect.getComponent(Rectangle).startEffect();
@@ -106,9 +107,10 @@ export default class NewClass extends cc.Component {
     createRectangle () {
         let rect: cc.Node = null;
         if (this.rectanglePool.size() > 0) {
-            rect = this.rectanglePool.get();
+            rect = this.rectanglePool.get(this.rectanglePool);
         } else {
             rect = cc.instantiate(this.rectanglePrefab);
+            rect.getComponent(Rectangle).pool = this.rectanglePool;
         }
 
         rect.getComponent(Rectangle).canvasNode = this.node;

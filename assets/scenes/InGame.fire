@@ -210,8 +210,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 750,
-      "height": 1334
+      "width": 1242,
+      "height": 13248
     },
     "_rotationX": 0,
     "_rotationY": 0,
@@ -288,8 +288,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 750,
-      "height": 1334
+      "width": 1242,
+      "height": 13248
     },
     "_rotationX": 0,
     "_rotationY": 0,
@@ -583,6 +583,9 @@
     "_enabled": true,
     "target": {
       "__id__": 11
+    },
+    "canvas": {
+      "__id__": 14
     }
   },
   {
