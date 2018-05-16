@@ -11,8 +11,9 @@
 const {ccclass, property} = cc._decorator;
 import InGame from "./InGame";
 import Rectangle from "./Rectangle";
+const FRICTION_FACTOR = 1000;
 const BOUND_SPEED_FACTOR = 3;
-const DIE_BOUND_SPEED = 20;
+const DIE_BOUND_SPEED = 50;
 
 @ccclass
 export default class NewClass extends cc.Component {
@@ -23,6 +24,8 @@ export default class NewClass extends cc.Component {
     @property({url: cc.AudioClip})
     jumpAudio: cc.AudioClip = null;
 
+    @property({url: cc.AudioClip})
+    gameOverAudio: cc.AudioClip = null;
 
     velocity: cc.Vec2;
     isBound: boolean;
@@ -50,11 +53,19 @@ export default class NewClass extends cc.Component {
         this.isGrounding = true;
         this.velocity = cc.Vec2.ZERO;
         this.node.getComponent(cc.CircleCollider).radius = 2;
+
+        this.startEffect();
+        let animState = this.node.getComponent(cc.Animation).play("rollBall");
+        animState.wrapMode = cc.WrapMode.Loop;
     }
 
     update (dt) {
         //check game over
-        if (this.boundSpeed < DIE_BOUND_SPEED && !this.isGrounding && this.canvas.node.getComponent(InGame).isGameOver == false) {
+        if (this.canvas.node.getComponent(InGame).isGameOver == true) {
+            return;
+        }
+
+        if (this.boundSpeed < DIE_BOUND_SPEED && !this.isGrounding) {
             this.gameOver();
         }
 
@@ -65,8 +76,11 @@ export default class NewClass extends cc.Component {
         if (this.isBound) {
             this.node.x += this.velocity.x * dt * this.boundSpeed;
             this.node.y += this.velocity.y * dt * this.boundSpeed;
-            this.boundSpeed *= 0.97;
+
+            this.boundSpeed -= this.boundSpeed <= 0 ? 0 : FRICTION_FACTOR * dt;
         }
+
+        this.rotatePlayer();
     }
 
     onTouchStart () {
@@ -99,6 +113,8 @@ export default class NewClass extends cc.Component {
 
             //audio
             cc.audioEngine.play(this.jumpAudio, false, 1);
+
+            this.jumpEffect();
         }
     }
 
@@ -115,10 +131,11 @@ export default class NewClass extends cc.Component {
                     this.canvas.getComponent(InGame).isBegan = true;
                 } else {
                     this.canvas.node.getComponent(InGame).gainScore();
+                    this.deformation();
+                    other.node.parent.getComponent(Rectangle).deformation();
                 }
                 
                 this.isGrounding = true;
-                this.deformation();
             }break;
         }
     }
@@ -145,13 +162,47 @@ export default class NewClass extends cc.Component {
     }
 
     gameOver () {
-        this.canvas.node.getComponent(InGame).gameOver();
+        let self = this;
+        this.canvas.node.getComponent(InGame).isGameOver = true;
+        let dieEffect = cc.scaleTo(1, 0, 0);
+        this.node.stopAllActions();
+
+        this.node.runAction(cc.sequence(dieEffect, cc.callFunc(function () {
+            self.canvas.node.getComponent(InGame).gameOver(); 
+        })));
+
+        cc.audioEngine.play(this.gameOverAudio, false, 1);
     }
 
     
     deformation () {
-        let large = cc.scaleTo(0.2, 1.2, 1.2);
+        this.node.stopAllActions();
+        this.node.setScale(1, 1);
+        let small = cc.scaleTo(0.2, 0.9, 0.9);
         let normal = cc.scaleTo(0.2, 1, 1);
+        this.node.runAction(cc.sequence(small, normal));
+    }
+
+    jumpEffect () {
+        let boundTime = (this.boundSpeed - DIE_BOUND_SPEED) / FRICTION_FACTOR;
+        let large = cc.scaleTo(boundTime / 2, 1.5, 1.5);
+        let normal = cc.scaleTo(boundTime / 2, 1, 1);
         this.node.runAction(cc.sequence(large, normal));
+    }
+
+    startEffect () {
+        this.node.setScale(4, 4);
+        this.node.runAction(cc.sequence(cc.scaleTo(0.5, 0.8, 0.8), cc.scaleTo(0.2, 1.2, 1.2), cc.scaleTo(0.2, 1, 1)));
+    }
+
+    rotatePlayer () {
+        if (this.isBound) {
+            let angle = this.velocity.angle(new cc.Vec2(0, 1)) * 180 / Math.PI;
+            this.node.rotation = angle * Math.abs(this.velocity.x) / this.velocity.x;
+            console.log(this.node.rotation);
+        }
+        else {
+            this.node.rotation = 0;
+        }
     }
 }

@@ -54,15 +54,27 @@ export default class NewClass extends cc.Component {
         this.node.position = new cc.Vec2(x, y);
 
         //init box collider
-        this.node.getComponent(cc.BoxCollider).size = cc.size(5, this.node.height);
+        this.node.getComponent(cc.BoxCollider).size = cc.size(20, this.node.height);
 
         //init bounding box
         this.node.getChildByName("BoundingBox").getComponent(cc.BoxCollider).size = this.node.getContentSize();
     }
 
     fall () {
+        this.node.stopAllActions();
         let scaleToAction = cc.scaleTo(1, 0, 0);
         let rotateByAction = cc.rotateBy(2, 360);
         this.node.runAction(cc.spawn(scaleToAction, rotateByAction));
+    }
+
+    deformation () {
+        this.node.stopAllActions();
+        let small = cc.scaleTo(0.2, 0.9, 0.9);
+        let normal = cc.scaleTo(0.2, 1, 1);
+        this.node.runAction(cc.sequence(small, normal));
+    }
+
+    startEffect () {
+        this.scheduleOnce(this.deformation, 0.4);
     }
 }

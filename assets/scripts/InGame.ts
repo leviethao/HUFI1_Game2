@@ -11,6 +11,7 @@
 const {ccclass, property} = cc._decorator;
 const RECTANGLE_INIT_COUNT = 10;
 import Rectangle from "./Rectangle";
+import Player from "./Player";
 
 @ccclass
 export default class NewClass extends cc.Component {
@@ -37,9 +38,6 @@ export default class NewClass extends cc.Component {
     scoreAudio: cc.AudioClip = null;    
     
     @property({url: cc.AudioClip})
-    gameOverAudio: cc.AudioClip = null;
-    
-    @property({url: cc.AudioClip})
     backgroundAudio: cc.AudioClip = null;
 
     // LIFE-CYCLE CALLBACKS:
@@ -51,6 +49,12 @@ export default class NewClass extends cc.Component {
     isBegan: boolean;
     backgroundAudioID: number;
     isGameOver: boolean;
+    level: number;
+
+    //Game setting
+    levelFactor: number;
+    speedFactor: number;
+    //
 
     onLoad () {
         //init pool
@@ -63,23 +67,29 @@ export default class NewClass extends cc.Component {
     }
 
     start () {
+        this.levelFactor = 5;
+        this.speedFactor = 50;
+        this.level = 0;
         this.isGameOver = false;
         this.isBegan = false;
         this.swapSide = false;
-        this.oldRectPosY = 0;
         this.scoreVal = 0;
         this.background.setLocalZOrder(1);
         this.player.setLocalZOrder(3);
         this.drawing.setLocalZOrder(4);
         this.scoreLabel.node.parent.setLocalZOrder(5);
 
+        //spawn begin rectangle
+        let beginRect = this.spawnRectangle();
+        beginRect.position = this.player.position;
+        this.oldRectPosY = beginRect.y;
+        beginRect.getComponent(Rectangle).startEffect();
+
+        //spawn other rectangles
         let initRectCount = 5;
         for (let i = 0; i < initRectCount; i++) {
             this.spawnRectangle();
         }
-
-        let beginRect = this.spawnRectangle();
-        beginRect.position = this.player.position;
 
         this.backgroundAudioID = cc.audioEngine.play(this.backgroundAudio, true, 0.5);
     }
@@ -87,8 +97,10 @@ export default class NewClass extends cc.Component {
     update (dt) {
         if (this.oldRectPosY - this.camera.y < this.node.height / 2) {
             this.spawnRectangle();
-            console.log(this.oldRectPosY);
         }
+
+        this.levelUp();
+        
     }
 
     createRectangle () {
@@ -113,7 +125,7 @@ export default class NewClass extends cc.Component {
 
         //set y position
         let randY = Math.random();
-        rect.y = this.oldRectPosY + randY * rect.height * 2 + rect.height;
+        rect.y = this.oldRectPosY + randY * rect.height + rect.height;
 
         this.oldRectPosY = rect.y;
         return rect;
@@ -127,14 +139,21 @@ export default class NewClass extends cc.Component {
 
     gameOver () {
         this.isGameOver = true;
-        cc.audioEngine.play(this.gameOverAudio, false, 1);
         cc.audioEngine.stop(this.backgroundAudioID);
         
         //save score
         cc.sys.localStorage.setItem("score", this.scoreVal);
 
+        this.node.stopAllActions();
         this.node.runAction(cc.sequence(cc.fadeOut(0.2), cc.callFunc(function () {
             cc.director.loadScene("GameOver");
         })));
+    }
+
+    levelUp () {
+        if (this.scoreVal - this.level * this.levelFactor >= this.levelFactor) {
+            this.level++;
+            this.player.getComponent(Player).scrollSpeed += this.speedFactor;
+        }
     }
 }
